@@ -208,17 +208,13 @@ def run_benchmarks():
     results["query"] = benchmark("基础查询", _bench_query, iterations=100)
 
     print("2. 过滤查询性能")
-    results["filtered_query"] = benchmark(
-        "过滤查询", _bench_filtered_query, iterations=100
-    )
+    results["filtered_query"] = benchmark("过滤查询", _bench_filtered_query, iterations=100)
 
     print("3. 缓存查询性能")
     results["cached_query"] = benchmark("缓存查询", _bench_cached_query, iterations=100)
 
     print("4. 批量查询性能")
-    results["batch_query"] = benchmark(
-        "批量查询(10并行)", _bench_batch_query, iterations=50
-    )
+    results["batch_query"] = benchmark("批量查询(10并行)", _bench_batch_query, iterations=50)
 
     print("5. 任务执行性能")
     results["task"] = benchmark("任务执行", _bench_task_execution, iterations=100)
