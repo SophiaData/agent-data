@@ -6,7 +6,9 @@ import asyncio
 import json
 from typing import Any, Callable, Dict, List, Optional
 
-from agent_data.mcp.tool import MCPTool, DataQueryTool
+from agent_data.core.errors import format_error
+from agent_data.core.redact import redact
+from agent_data.mcp.tool import DataQueryTool, MCPTool
 
 
 class MCPServer:
@@ -124,4 +126,4 @@ class MCPServer:
             result = await handler(arguments)
             return {"content": [{"type": "text", "text": json.dumps(result)}]}
         except Exception as e:
-            return {"error": str(e)}
+            return {"error": redact(format_error(e))}

@@ -9,6 +9,7 @@ from typing import Any, Callable, Dict, List, Optional, Union
 from agent_data.cache.base import BaseCache
 from agent_data.cache.memory import MemoryCache
 from agent_data.core.connector import BaseConnector, get_connector, list_connectors
+from agent_data.core.errors import format_error
 from agent_data.core.models import (
     AgentContext,
     DataSource,
@@ -19,6 +20,7 @@ from agent_data.core.models import (
     QueryResult,
     QueryType,
 )
+from agent_data.core.redact import redact
 from agent_data.tracing.base import BaseTracer, TraceSpan
 from agent_data.tracing.memory import MemoryTracer
 
@@ -280,7 +282,7 @@ class AgentDataClient:
                 query_time_ms=(time.time() - start_time) * 1000,
             )
         except Exception as e:
-            error_msg = str(e)
+            error_msg = redact(format_error(e))
             if span:
                 span.finish(status="error", error=error_msg)
             return QueryResult(
@@ -429,7 +431,7 @@ class AgentDataClient:
             return task_result
 
         except Exception as e:
-            task_result = task.fail(str(e))
+            task_result = task.fail(redact(format_error(e)))
 
             if span:
                 span.set_attribute("task_status", "failed")
