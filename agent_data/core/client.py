@@ -153,8 +153,14 @@ class AgentDataClient:
             return connector
 
     def _generate_cache_key(self, query: Query, context: Optional[AgentContext] = None) -> str:
-        """Generate a cache key for a query."""
-        key_parts = {
+        """Generate a cache key for a query.
+
+        For natural-language queries (marked by _parse_natural_language via the
+        'natural_language' metadata key), the raw text is excluded from the
+        hash — any punctuation / whitespace change would otherwise defeat the
+        cache. NL queries are bucketed by (source, query_type) only.
+        """
+        key_parts: Dict[str, Any] = {
             "source": query.source,
             "query_type": query.query_type,
             "filters": [f.model_dump() for f in query.filters] if query.filters else [],
@@ -162,8 +168,13 @@ class AgentDataClient:
             "limit": query.limit,
             "offset": query.offset,
             "order_by": query.order_by,
-            "query": query.query,
         }
+        # If the query originated from natural-language input, drop the raw
+        # text from the cache key.
+        if query.metadata.get("natural_language"):
+            key_parts["query"] = None
+        else:
+            key_parts["query"] = query.query
         if context:
             key_parts["context"] = {
                 "agent_id": context.agent_id,
@@ -431,6 +442,7 @@ class AgentDataClient:
         plan: TaskPlan,
         executor: Callable,
         parallel: bool = True,
+        max_concurrent: int = 5,
         context: Optional[AgentContext] = None,
     ) -> Dict[str, TaskResult]:
         """
@@ -440,6 +452,7 @@ class AgentDataClient:
             plan: Task plan to execute
             executor: Async function to execute tasks
             parallel: Whether to execute tasks in parallel
+            max_concurrent: Max parallel tasks (only used when parallel=True)
             context: Agent context
 
         Returns:
@@ -449,7 +462,7 @@ class AgentDataClient:
         for task in plan.tasks:
             task_executor.register(task.name, executor)
 
-        plan_executor = PlanExecutor(task_executor)
+        plan_executor = PlanExecutor(task_executor, max_concurrent=max_concurrent)
 
         if parallel:
             return await plan_executor.execute(plan)
