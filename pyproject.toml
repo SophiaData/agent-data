@@ -65,6 +65,10 @@ include = ["agent_data*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+asyncio_mode = "auto"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
 
 [tool.black]
 line-length = 100
