@@ -33,7 +33,9 @@ jobs:
         run: black --check agent_data/ tests/
 
       - name: Flake8
-        run: flake8 agent_data/ tests/
+        # pin to project max-line-length=100 (pyproject.toml flake8 section)
+        # and ignore E501/W503/E203 as configured locally
+        run: flake8 --max-line-length=100 --extend-ignore=E501,W503,E203 agent_data/ tests/
 
       - name: Mypy
         run: mypy agent_data/ || true  # informational; many third-party libs missing stubs
