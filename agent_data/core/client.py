@@ -237,6 +237,9 @@ class AgentDataClient:
                 if cached_result is not None:
                     result = QueryResult(**cached_result)
                     result.cached = True
+                    # cache hit 也填 query_time_ms,便于上层观测
+                    if result.query_time_ms is None or result.query_time_ms == 0:
+                        result.query_time_ms = (time.time() - start_time) * 1000
                     if span:
                         span.set_attribute("cache_hit", True)
                         await self._tracer.finish_span(span)
